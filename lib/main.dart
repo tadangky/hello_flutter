@@ -39,12 +39,15 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   CameraController? controller;
   String imagePath = "";
-  int selectedCamera = 0;
+  int selectedCamera = 1;
+  String serverUrl = '10.124.71.7:1234';
+  String uploadResult = "";
 
   @override
   void initState() {
     super.initState();
-    controller = CameraController(cameras![selectedCamera], ResolutionPreset.max);
+    controller =
+        CameraController(cameras![selectedCamera], ResolutionPreset.max);
 
     controller?.initialize().then((_) {
       if (!mounted) {
@@ -66,40 +69,39 @@ class _MyHomePageState extends State<MyHomePage> {
       return Container();
     }
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Flutter demo'),
+      ),
       body: SafeArea(
         child: Center(
           child: Column(
             children: [
+              const SizedBox(
+                height: 20,
+              ),
               SizedBox(
                 height: 50,
                 width: 300,
                 child: TextField(
-                  decoration: const InputDecoration(hintText: "Server URL"),
-                  onChanged: (text) {},
+                  controller: TextEditingController()..text = serverUrl,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "Server URL",
+                    hintText: "Enter Server URL",
+                  ),
+                  onChanged: (text) {
+                    serverUrl = text;
+                  },
                 ),
               ),
-              TextButton(
-                  onPressed: () async {
-                    try {
-                      selectedCamera = selectedCamera == 0 ? 1 : 0;
-                      controller = CameraController(cameras![selectedCamera], ResolutionPreset.max);
-                      controller?.initialize().then((_) {
-                        if (!mounted) {
-                          return;
-                        }
-                        setState(() {});
-                      });
-                    } catch (e) {
-                      print(e);
-                    }
-                  },
-                  child: const Text("Change Camera")),
+              const SizedBox(
+                height: 20,
+              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Column(
                     children: [
-                      Container(
+                      SizedBox(
                         width: 90,
                         height: 160,
                         child: AspectRatio(
@@ -110,23 +112,41 @@ class _MyHomePageState extends State<MyHomePage> {
                       TextButton(
                           onPressed: () async {
                             try {
-                              // print("click.......");
-                              final image = await controller!.takePicture();
-                              setState(() {
-                                imagePath = image.path;
+                              selectedCamera = selectedCamera == 0 ? 1 : 0;
+                              controller = CameraController(
+                                  cameras![selectedCamera],
+                                  ResolutionPreset.max);
+                              controller?.initialize().then((_) {
+                                if (!mounted) {
+                                  return;
+                                }
+                                setState(() {});
                               });
-                              print(imagePath);
                             } catch (e) {
                               print(e);
                             }
                           },
-                          child: Text("Take Photo")),
+                          child: const Text("Change Camera")),
+                      TextButton(
+                          onPressed: () async {
+                            try {
+                              // print("click.......");
+                              final image = await controller!.takePicture();
+                              setState(() {
+                                imagePath = image.path;
+                                uploadResult = '';
+                              });
+                            } catch (e) {
+                              print(e);
+                            }
+                          },
+                          child: const Text("Take Photo")),
                     ],
                   ),
                   Column(
                     children: [
                       if (imagePath != "")
-                        Container(
+                        SizedBox(
                             width: 200,
                             height: 160,
                             child: Image.file(
@@ -137,7 +157,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             onPressed: () async {
                               _uploadImage();
                             },
-                            child: Text("Upload Photo"))
+                            child: const Text("Upload Photo")),
+                      Text(uploadResult),
                     ],
                   )
                 ],
@@ -154,20 +175,29 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    final url = Uri.parse(
-        'http://192.168.0.230:1234/upload'); // Replace with your server URL
+    final url = Uri.parse('http://$serverUrl/upload');
+    print(url);
     final request = http.MultipartRequest('POST', url);
     request.files.add(await http.MultipartFile.fromPath('file', imagePath));
 
-    final response = await request.send();
+    try {
+      final response = await request.send();
+      print(response.statusCode);
 
-    print(response.statusCode);
-
-    if (response.statusCode == 200) {
-      // Image uploaded successfully
-      print('Image uploaded!');
-    } else {
-      print('Image upload failed');
+      if (response.statusCode == 200) {
+        // Image uploaded successfully
+        setState(() {
+          uploadResult = 'Upload success';
+        });
+      } else {
+        setState(() {
+          uploadResult = 'Upload failed';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        uploadResult = 'Upload failed';
+      });
     }
   }
 }
