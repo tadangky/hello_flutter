@@ -1,0 +1,12 @@
+build
+build/ios/
+build/ios/app-delta/
+ios/Runner.xcodeproj/
+/.dart_tool/flutter_build/
+/.flutter-plugins
+/.idea/libraries/
+/.flutter-plugins-dependencies
+/.dart_tool/
+/.dart_tool/package_config.json
+/.dart_tool/package_config_subset
+/.dart_tool/version
