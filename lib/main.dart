@@ -131,9 +131,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () async {
                             try {
                               // print("click.......");
-                              final image = await controller!.takePicture();
+                              final image = await controller?.takePicture();
                               setState(() {
-                                imagePath = image.path;
+                                imagePath =
+                                    image?.path != null ? imagePath : '';
                                 uploadResult = '';
                               });
                             } catch (e) {
