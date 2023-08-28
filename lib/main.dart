@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/material.dart';
+
 import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 List<CameraDescription>? cameras;
@@ -18,6 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -37,11 +39,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   CameraController? controller;
   String imagePath = "";
+  int selectedCamera = 0;
 
   @override
   void initState() {
     super.initState();
-    controller = CameraController(cameras![1], ResolutionPreset.max);
+    controller = CameraController(cameras![selectedCamera], ResolutionPreset.max);
 
     controller?.initialize().then((_) {
       if (!mounted) {
@@ -69,42 +72,76 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               SizedBox(
                 height: 50,
-              ),
-              Container(
-                width: 90,
-                height: 160,
-                child: AspectRatio(
-                  aspectRatio: controller!.value.aspectRatio,
-                  child: CameraPreview(controller!),
+                width: 300,
+                child: TextField(
+                  decoration: const InputDecoration(hintText: "Server URL"),
+                  onChanged: (text) {},
                 ),
               ),
               TextButton(
                   onPressed: () async {
                     try {
-                      // print("click.......");
-                      final image = await controller!.takePicture();
-                      setState(() {
-                        imagePath = image.path;
+                      selectedCamera = selectedCamera == 0 ? 1 : 0;
+                      controller = CameraController(cameras![selectedCamera], ResolutionPreset.max);
+                      controller?.initialize().then((_) {
+                        if (!mounted) {
+                          return;
+                        }
+                        setState(() {});
                       });
-                      print(imagePath);
                     } catch (e) {
                       print(e);
                     }
                   },
-                  child: Text("Take Photo")),
-              if (imagePath != "")
-                Container(
-                    width: 200,
-                    height: 200,
-                    child: Image.file(
-                      File(imagePath),
-                    )),
-              if (imagePath != "")
-                TextButton(
-                    onPressed: () async {
-                      _uploadImage();
-                    },
-                    child: Text("Upload Photo"))
+                  child: const Text("Change Camera")),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(
+                    children: [
+                      Container(
+                        width: 90,
+                        height: 160,
+                        child: AspectRatio(
+                          aspectRatio: controller!.value.aspectRatio,
+                          child: CameraPreview(controller!),
+                        ),
+                      ),
+                      TextButton(
+                          onPressed: () async {
+                            try {
+                              // print("click.......");
+                              final image = await controller!.takePicture();
+                              setState(() {
+                                imagePath = image.path;
+                              });
+                              print(imagePath);
+                            } catch (e) {
+                              print(e);
+                            }
+                          },
+                          child: Text("Take Photo")),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      if (imagePath != "")
+                        Container(
+                            width: 200,
+                            height: 160,
+                            child: Image.file(
+                              File(imagePath),
+                            )),
+                      if (imagePath != "")
+                        TextButton(
+                            onPressed: () async {
+                              _uploadImage();
+                            },
+                            child: Text("Upload Photo"))
+                    ],
+                  )
+                ],
+              ),
             ],
           ),
         ),
