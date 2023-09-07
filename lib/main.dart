@@ -38,7 +38,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   CameraController? controller;
-  String? imagePath = null;
+  String imagePath = "";
   int selectedCamera = 1;
   String serverUrl = '10.124.71.7:1234';
   String uploadResult = "";
@@ -131,9 +131,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () async {
                             try {
                               // print("click.......");
-                              final image = await controller?.takePicture();
+                              final image = await controller!.takePicture();
                               setState(() {
-                                imagePath = image?.path != null ? image?.path : '';
+                                imagePath = image.path;
                                 uploadResult = '';
                               });
                             } catch (e) {
@@ -150,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             width: 200,
                             height: 160,
                             child: Image.file(
-                              File(imagePath!),
+                              File(imagePath),
                             )),
                       if (imagePath != "")
                         TextButton(
@@ -178,7 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final url = Uri.parse('http://$serverUrl/upload');
     print(url);
     final request = http.MultipartRequest('POST', url);
-    request.files.add(await http.MultipartFile.fromPath('file', imagePath!));
+    request.files.add(await http.MultipartFile.fromPath('file', imagePath));
 
     try {
       final response = await request.send();
